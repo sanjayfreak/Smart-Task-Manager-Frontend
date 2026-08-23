@@ -1,68 +1,91 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import API from "../services/api";
+import AuthShell from "./AuthShell";
 
-function Register() {
+const field =
+  "w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 " +
+  "placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20";
+
+export default function Register() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [busy, setBusy] = useState(false);
   const navigate = useNavigate();
 
-  const handleRegister = async () => {
+  const handleRegister = async (e) => {
+    e.preventDefault();
     if (!username.trim() || !password.trim()) {
-      alert("Enter all fields");
+      setError("Choose a username and password.");
       return;
     }
-
+    if (password.length < 6) {
+      setError("Use at least 6 characters for your password.");
+      return;
+    }
+    setError("");
+    setBusy(true);
     try {
-      const res = await API.post("/auth/register", { username, password });
-      alert(res.data);   // ✅ backend returns plain string "Registered Successfully"
-      navigate("/");
+      await API.post("/auth/register", { username, password });
+      setNotice("Account created. Taking you to sign in…");
+      setTimeout(() => navigate("/"), 900);
     } catch (err) {
-      // ✅ Fix: extract message properly from Spring error response
-      const msg =
-        typeof err.response?.data === "string"
-          ? err.response.data
-          : err.response?.data?.message || "Registration failed";
-      alert(msg);
+      const data = err.response?.data;
+      setError(
+        typeof data === "string" && data
+          ? data
+          : data?.message || "Registration failed. Please try again."
+      );
+    } finally {
+      setBusy(false);
     }
   };
 
   return (
-    <div className="flex justify-center items-center h-screen bg-gray-900 text-white">
-      <div className="p-6 bg-gray-800 rounded w-80">
-        <h2 className="text-xl mb-4">Register</h2>
+    <AuthShell
+      title="Create account"
+      subtitle="Set up your workspace in a few seconds."
+      footer={
+        <>
+          Already registered?{" "}
+          <Link to="/" className="font-medium text-indigo-600 hover:text-indigo-700">
+            Sign in
+          </Link>
+        </>
+      }
+    >
+      <form onSubmit={handleRegister} className="space-y-4">
+        <div>
+          <label htmlFor="reg-user" className="mb-1.5 block text-xs font-medium text-slate-700">
+            Username
+          </label>
+          <input id="reg-user" value={username} onChange={(e) => setUsername(e.target.value)}
+            autoComplete="username" placeholder="pick a username" className={field} />
+        </div>
 
-        <input
-          placeholder="Username"
-          value={username}
-          className="w-full p-2 mb-3 text-black rounded"
-          onChange={(e) => setUsername(e.target.value)}
-        />
+        <div>
+          <label htmlFor="reg-pass" className="mb-1.5 block text-xs font-medium text-slate-700">
+            Password
+          </label>
+          <input id="reg-pass" type="password" value={password} onChange={(e) => setPassword(e.target.value)}
+            autoComplete="new-password" placeholder="at least 6 characters" className={field} />
+        </div>
 
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          className="w-full p-2 mb-3 text-black rounded"
-          onChange={(e) => setPassword(e.target.value)}
-        />
+        {error && (
+          <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">{error}</p>
+        )}
+        {notice && (
+          <p role="status" className="rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-800">{notice}</p>
+        )}
 
-        <button
-          className="bg-green-500 w-full p-2 rounded hover:bg-green-600"
-          onClick={handleRegister}
-        >
-          Register
+        <button type="submit" disabled={busy}
+          className="w-full rounded-lg bg-indigo-600 py-2.5 text-sm font-medium text-white shadow-sm
+                     transition hover:bg-indigo-700 disabled:opacity-60">
+          {busy ? "Creating…" : "Create account"}
         </button>
-
-        <p
-          className="mt-3 text-sm cursor-pointer text-blue-400"
-          onClick={() => navigate("/")}
-        >
-          Already have an account? Login
-        </p>
-      </div>
-    </div>
+      </form>
+    </AuthShell>
   );
 }
-
-export default Register;

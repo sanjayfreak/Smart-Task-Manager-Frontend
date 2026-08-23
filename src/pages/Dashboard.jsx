@@ -1,188 +1,234 @@
-import { useEffect, useState } from "react";
-import API from "../services/api";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import API from "../services/api";
+import Sidebar from "../components/Sidebar";
+import StatCards from "../components/StatCards";
+import StatusDonut from "../components/StatusDonut";
+import TaskList from "../components/TaskList";
+import AddTaskModal from "../components/AddTaskModal";
+import { STATUS_ORDER, isOverdue } from "../theme";
 
-function Dashboard() {
+const NEXT_STATUS = {
+  PENDING: "IN_PROGRESS",
+  IN_PROGRESS: "COMPLETED",
+  COMPLETED: "PENDING",
+};
+
+export default function Dashboard() {
   const [tasks, setTasks] = useState([]);
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
+  const [filter, setFilter] = useState("ALL");
+  const [query, setQuery] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [navOpen, setNavOpen] = useState(false);
+  const [banner, setBanner] = useState("");
 
-  const loadTasks = async () => {
+  const navigate = useNavigate();
+  const username = localStorage.getItem("username") || "";
+
+  const loadTasks = useCallback(async () => {
     try {
-      const res = await API.get("/tasks");
+      const res = await API.get("/tasks", { params: { size: 200 } });
       setTasks(res.data.content || []);
     } catch (err) {
-      localStorage.removeItem("token");
-      navigate("/");
-    }
-  };
-
-  const addTask = async () => {
-    if (!title.trim() || !description.trim()) {
-      alert("Enter title and description");
-      return;
-    }
-    setLoading(true);
-    try {
-      await API.post("/tasks", { title, description, status: "PENDING" });
-      setTitle("");
-      setDescription("");
-      loadTasks();
-    } catch (err) {
-      alert("Failed to add task");
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        localStorage.removeItem("token");
+        navigate("/");
+      } else {
+        setBanner("Couldn't load your tasks. The server may still be waking up.");
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, [navigate]);
 
-  // ✅ Toggle status between PENDING and COMPLETED
-  const toggleStatus = async (task) => {
-    const newStatus = task.status === "PENDING" ? "COMPLETED" : "PENDING";
+  useEffect(() => { loadTasks(); }, [loadTasks]);
+
+  const counts = useMemo(() => {
+    const c = { total: tasks.length };
+    STATUS_ORDER.forEach((k) => { c[k] = 0; });
+    tasks.forEach((t) => {
+      const k = STATUS_ORDER.includes(t.status) ? t.status : "PENDING";
+      c[k] += 1;
+    });
+    return c;
+  }, [tasks]);
+
+  const overdueCount = useMemo(
+    () => tasks.filter((t) => t.status !== "COMPLETED" && isOverdue(t.dueDate)).length,
+    [tasks]
+  );
+
+  const visible = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return tasks.filter((t) => {
+      if (filter !== "ALL" && (t.status || "PENDING") !== filter) return false;
+      if (!q) return true;
+      return [t.title, t.description, t.category]
+        .filter(Boolean)
+        .some((v) => v.toLowerCase().includes(q));
+    });
+  }, [tasks, filter, query]);
+
+  const createTask = async (payload) => {
+    setSaving(true);
     try {
-      await API.patch(`/tasks/${task.id}/status`, { status: newStatus });
-      loadTasks();
-    } catch (err) {
-      alert("Failed to update status");
+      const res = await API.post("/tasks", payload);
+      setTasks((prev) => [...prev, res.data]);
+      setModalOpen(false);
+      return true;
+    } catch {
+      return false;
+    } finally {
+      setSaving(false);
     }
   };
 
-  // ✅ Delete task
+  const cycleStatus = async (task) => {
+    const next = NEXT_STATUS[task.status] || "IN_PROGRESS";
+    const before = tasks;
+    setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, status: next } : t)));
+    try {
+      await API.patch(`/tasks/${task.id}/status`, { status: next });
+    } catch {
+      setTasks(before);
+      setBanner("Couldn't update that task.");
+    }
+  };
+
   const deleteTask = async (id) => {
-    if (!window.confirm("Delete this task?")) return;
+    setDeletingId(id);
+    const before = tasks;
+    setTasks((prev) => prev.filter((t) => t.id !== id));
     try {
       await API.delete(`/tasks/${id}`);
-      loadTasks();
-    } catch (err) {
-      const msg =
-        typeof err.response?.data === "string"
-          ? err.response.data
-          : err.response?.data?.message || "Failed to delete";
-      alert(msg);
+    } catch {
+      setTasks(before);
+      setBanner("Couldn't delete that task.");
+    } finally {
+      setDeletingId(null);
     }
   };
 
   const logout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("username");
     navigate("/");
   };
 
-  useEffect(() => {
-    loadTasks();
-  }, []);
-
-  const pending = tasks.filter((t) => t.status === "PENDING");
-  const completed = tasks.filter((t) => t.status === "COMPLETED");
-
   return (
-    <div className="min-h-screen bg-gray-950 text-white p-6">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold text-purple-400">📋 Task Manager</h1>
-        <button
-          onClick={logout}
-          className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded transition"
-        >
-          Logout
-        </button>
-      </div>
+    <div className="min-h-full bg-slate-100">
+      <Sidebar
+        filter={filter}
+        setFilter={setFilter}
+        counts={counts}
+        username={username}
+        onLogout={logout}
+        open={navOpen}
+        onClose={() => setNavOpen(false)}
+      />
 
-      {/* Add Task */}
-      <div className="bg-gray-800 p-4 rounded-lg mb-8 flex flex-col gap-3">
-        <h2 className="text-lg font-semibold text-gray-200">Add New Task</h2>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <input
-            placeholder="Title"
-            className="flex-1 p-2 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-purple-500"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-          <input
-            placeholder="Description"
-            className="flex-1 p-2 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:border-purple-500"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-          <button
-            onClick={addTask}
-            disabled={loading}
-            className="bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white px-6 py-2 rounded transition"
-          >
-            {loading ? "Adding..." : "Add Task"}
-          </button>
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-4 mb-8">
-        <div className="bg-yellow-600 rounded-lg p-4 text-center">
-          <p className="text-3xl font-bold">{pending.length}</p>
-          <p className="text-sm mt-1">Pending</p>
-        </div>
-        <div className="bg-green-600 rounded-lg p-4 text-center">
-          <p className="text-3xl font-bold">{completed.length}</p>
-          <p className="text-sm mt-1">Completed</p>
-        </div>
-      </div>
-
-      {/* Task List */}
-      {tasks.length === 0 ? (
-        <p className="text-center text-gray-500 mt-10">No tasks yet. Add one above!</p>
-      ) : (
-        <div className="space-y-3">
-          {tasks.map((t) => (
-            <div
-              key={t.id}
-              className={`flex items-start justify-between p-4 rounded-lg border ${
-                t.status === "COMPLETED"
-                  ? "bg-green-900 border-green-700"
-                  : "bg-gray-800 border-gray-700"
-              }`}
+      <div className="lg:pl-64">
+        <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/80 backdrop-blur">
+          <div className="flex items-center gap-3 px-4 py-3.5 sm:px-6">
+            <button
+              onClick={() => setNavOpen(true)}
+              aria-label="Open menu"
+              className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 lg:hidden"
             >
-              {/* Task Info */}
-              <div className="flex-1 mr-4">
-                <p
-                  className={`font-semibold text-lg ${
-                    t.status === "COMPLETED"
-                      ? "line-through text-gray-400"
-                      : "text-white"
-                  }`}
-                >
-                  {t.title}
-                </p>
-                {/* ✅ Description now showing */}
-                <p className="text-gray-400 text-sm mt-1">{t.description}</p>
-              </div>
+              <svg viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <path d="M3 5h14M3 10h14M3 15h14" strokeLinecap="round" />
+              </svg>
+            </button>
 
-              {/* Actions */}
-              <div className="flex flex-col sm:flex-row gap-2 items-end sm:items-center">
-                {/* ✅ Status toggle */}
-                <button
-                  onClick={() => toggleStatus(t)}
-                  className={`text-xs px-3 py-1 rounded-full font-semibold transition ${
-                    t.status === "COMPLETED"
-                      ? "bg-yellow-500 hover:bg-yellow-600 text-black"
-                      : "bg-green-500 hover:bg-green-600 text-white"
-                  }`}
-                >
-                  {t.status === "COMPLETED" ? "↩ Pending" : "✓ Complete"}
-                </button>
-
-                {/* ✅ Delete button */}
-                <button
-                  onClick={() => deleteTask(t.id)}
-                  className="text-xs px-3 py-1 rounded-full bg-red-600 hover:bg-red-700 text-white transition"
-                >
-                  🗑 Delete
-                </button>
-              </div>
+            <div className="relative min-w-0 flex-1 max-w-md">
+              <svg viewBox="0 0 20 20"
+                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+                fill="none" stroke="currentColor" strokeWidth="1.8">
+                <circle cx="9" cy="9" r="5.5" />
+                <path d="M13.5 13.5L17 17" strokeLinecap="round" />
+              </svg>
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search tasks…"
+                aria-label="Search tasks"
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-sm
+                           text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white
+                           focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+              />
             </div>
-          ))}
-        </div>
-      )}
+
+            <button
+              onClick={() => setModalOpen(true)}
+              className="ml-auto inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-3.5 py-2
+                         text-sm font-medium text-white shadow-sm transition hover:bg-indigo-700"
+            >
+              <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M10 4.5v11M4.5 10h11" strokeLinecap="round" />
+              </svg>
+              <span className="hidden sm:inline">New task</span>
+            </button>
+          </div>
+        </header>
+
+        <main className="mx-auto max-w-6xl space-y-5 px-4 py-6 sm:px-6">
+          <div>
+            <h1 className="text-xl font-semibold tracking-tight text-slate-900">
+              {username ? `Welcome back, ${username}` : "Dashboard"}
+            </h1>
+            <p className="mt-0.5 text-sm text-slate-500">
+              {counts.total === 0 ? (
+                "No tasks yet — create one to get started."
+              ) : (
+                <>
+                  {counts.PENDING + counts.IN_PROGRESS} open · {counts.COMPLETED} completed
+                  {overdueCount > 0 && (
+                    <span className="font-medium text-red-600"> · {overdueCount} overdue</span>
+                  )}
+                </>
+              )}
+            </p>
+          </div>
+
+          {banner && (
+            <div role="alert" className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+              <span className="flex-1">{banner}</span>
+              <button onClick={() => setBanner("")} className="text-amber-700 hover:text-amber-900" aria-label="Dismiss">✕</button>
+            </div>
+          )}
+
+          <StatCards counts={counts} />
+
+          <div className="grid gap-5 lg:grid-cols-3">
+            <div className="lg:col-span-2">
+              <TaskList
+                tasks={visible}
+                loading={loading}
+                filter={filter}
+                setFilter={setFilter}
+                counts={counts}
+                onCycleStatus={cycleStatus}
+                onDelete={deleteTask}
+                deletingId={deletingId}
+                query={query}
+              />
+            </div>
+            <div className="lg:col-span-1">
+              <StatusDonut counts={counts} />
+            </div>
+          </div>
+        </main>
+      </div>
+
+      <AddTaskModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onCreate={createTask}
+        saving={saving}
+      />
     </div>
   );
 }
-
-export default Dashboard;
