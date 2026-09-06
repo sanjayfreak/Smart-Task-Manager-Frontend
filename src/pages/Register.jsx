@@ -3,9 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import API from "../services/api";
 import AuthShell from "./AuthShell";
 
-const field =
-  "w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 " +
-  "placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20";
+const field = "field";
 
 export default function Register() {
   const [username, setUsername] = useState("");
@@ -50,7 +48,7 @@ export default function Register() {
       footer={
         <>
           Already registered?{" "}
-          <Link to="/" className="font-medium text-indigo-600 hover:text-indigo-700">
+          <Link to="/" className="font-medium text-[#8a5a3c] hover:text-[#70472f]">
             Sign in
           </Link>
         </>
@@ -58,7 +56,7 @@ export default function Register() {
     >
       <form onSubmit={handleRegister} className="space-y-4">
         <div>
-          <label htmlFor="reg-user" className="mb-1.5 block text-xs font-medium text-slate-700">
+          <label htmlFor="reg-user" className="mb-1.5 block text-xs font-medium text-[#4a4338]">
             Username
           </label>
           <input id="reg-user" value={username} onChange={(e) => setUsername(e.target.value)}
@@ -66,7 +64,7 @@ export default function Register() {
         </div>
 
         <div>
-          <label htmlFor="reg-pass" className="mb-1.5 block text-xs font-medium text-slate-700">
+          <label htmlFor="reg-pass" className="mb-1.5 block text-xs font-medium text-[#4a4338]">
             Password
           </label>
           <input id="reg-pass" type="password" value={password} onChange={(e) => setPassword(e.target.value)}
@@ -74,15 +72,15 @@ export default function Register() {
         </div>
 
         {error && (
-          <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">{error}</p>
+          <p role="alert" className="rounded-md bg-[#f8e7e2] px-3 py-2 text-xs text-[#b0472f]">{error}</p>
         )}
         {notice && (
-          <p role="status" className="rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-800">{notice}</p>
+          <p role="status" className="rounded-md bg-emerald-50 px-3 py-2 text-xs text-emerald-800">{notice}</p>
         )}
 
         <button type="submit" disabled={busy}
-          className="w-full rounded-lg bg-indigo-600 py-2.5 text-sm font-medium text-white shadow-sm
-                     transition hover:bg-indigo-700 disabled:opacity-60">
+          className="w-full rounded-md bg-[#8a5a3c] py-2.5 text-sm font-medium text-white shadow-sm
+                     transition hover:bg-[#70472f] disabled:opacity-60">
           {busy ? "Creating…" : "Create account"}
         </button>
       </form>

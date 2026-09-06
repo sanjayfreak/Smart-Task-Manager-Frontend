@@ -1,18 +1,21 @@
 // Single source of truth for status + priority presentation.
-// Status colours are validated for colour-vision deficiency:
-// worst all-pairs CVD deltaE 16.2, normal-vision 29.0 on a light surface.
+//
+// "Paper Planner": pigments rather than screen colours — walnut ink,
+// sage, plum and a rust red for anything late. Every status is also
+// labelled in text, so colour never carries the meaning alone.
+
 export const STATUS = {
-  PENDING:     { label: "To Do",       color: "#eda100", soft: "#fdf3dc", ink: "#7a5300" },
-  IN_PROGRESS: { label: "In Progress", color: "#2a78d6", soft: "#e4eefb", ink: "#1b4d8a" },
-  COMPLETED:   { label: "Completed",   color: "#008300", soft: "#e0f0e0", ink: "#005400" },
+  PENDING:     { label: "To Do",       color: "#c98a3f", soft: "#f6ecd9", ink: "#7a5326" },
+  IN_PROGRESS: { label: "In Progress", color: "#7a6a99", soft: "#efeaf5", ink: "#55476f" },
+  COMPLETED:   { label: "Completed",   color: "#5c7a5e", soft: "#e6eee6", ink: "#3c5540" },
 };
 
 export const STATUS_ORDER = ["PENDING", "IN_PROGRESS", "COMPLETED"];
 
 export const PRIORITY = {
-  HIGH:   { label: "High",   soft: "#fbe6e6", ink: "#a12525" },
-  MEDIUM: { label: "Medium", soft: "#fdf3dc", ink: "#7a5300" },
-  LOW:    { label: "Low",    soft: "#eef1f5", ink: "#4a5565" },
+  HIGH:   { label: "High",   soft: "#f8e7e2", ink: "#b0472f" },
+  MEDIUM: { label: "Medium", soft: "#f6ecd9", ink: "#7a5326" },
+  LOW:    { label: "Low",    soft: "#eee9dd", ink: "#6f675a" },
 };
 
 export const statusOf = (t) => STATUS[t?.status] || STATUS.PENDING;
@@ -34,4 +37,16 @@ export function isOverdue(iso) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   return d < today;
+}
+
+/** "2 days late" / "due today" — the phrasing used in the margin notes. */
+export function lateness(iso) {
+  if (!iso) return "";
+  const d = new Date(iso + "T00:00:00");
+  if (Number.isNaN(d.getTime())) return "";
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const days = Math.round((today - d) / 86400000);
+  if (days <= 0) return days === 0 ? "due today" : "";
+  return days === 1 ? "a day late" : `${days} days late`;
 }

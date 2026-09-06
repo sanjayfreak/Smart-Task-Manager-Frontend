@@ -3,9 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import API from "../services/api";
 import AuthShell from "./AuthShell";
 
-const field =
-  "w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 " +
-  "placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20";
+const field = "field";
 
 export default function Login() {
   const [username, setUsername] = useState("");
@@ -46,7 +44,7 @@ export default function Login() {
       footer={
         <>
           Don't have an account?{" "}
-          <Link to="/register" className="font-medium text-indigo-600 hover:text-indigo-700">
+          <Link to="/register" className="font-medium text-[#8a5a3c] hover:text-[#70472f]">
             Create one
           </Link>
         </>
@@ -54,7 +52,7 @@ export default function Login() {
     >
       <form onSubmit={handleLogin} className="space-y-4">
         <div>
-          <label htmlFor="login-user" className="mb-1.5 block text-xs font-medium text-slate-700">
+          <label htmlFor="login-user" className="mb-1.5 block text-xs font-medium text-[#4a4338]">
             Username
           </label>
           <input id="login-user" value={username} onChange={(e) => setUsername(e.target.value)}
@@ -62,7 +60,7 @@ export default function Login() {
         </div>
 
         <div>
-          <label htmlFor="login-pass" className="mb-1.5 block text-xs font-medium text-slate-700">
+          <label htmlFor="login-pass" className="mb-1.5 block text-xs font-medium text-[#4a4338]">
             Password
           </label>
           <input id="login-pass" type="password" value={password} onChange={(e) => setPassword(e.target.value)}
@@ -70,16 +68,16 @@ export default function Login() {
         </div>
 
         {error && (
-          <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">{error}</p>
+          <p role="alert" className="rounded-md bg-[#f8e7e2] px-3 py-2 text-xs text-[#b0472f]">{error}</p>
         )}
 
         <button type="submit" disabled={busy}
-          className="w-full rounded-lg bg-indigo-600 py-2.5 text-sm font-medium text-white shadow-sm
-                     transition hover:bg-indigo-700 disabled:opacity-60">
+          className="w-full rounded-md bg-[#8a5a3c] py-2.5 text-sm font-medium text-white shadow-sm
+                     transition hover:bg-[#70472f] disabled:opacity-60">
           {busy ? "Signing in…" : "Sign in"}
         </button>
 
-        <p className="text-center text-[11px] leading-relaxed text-slate-400">
+        <p className="text-center text-[11px] leading-relaxed text-[#a89c84]">
           The server sleeps when idle — the first sign-in can take up to a minute.
         </p>
       </form>

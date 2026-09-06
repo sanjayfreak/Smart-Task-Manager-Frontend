@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
 import { STATUS, STATUS_ORDER, PRIORITY } from "../theme";
 
-const field =
-  "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 " +
-  "placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20";
+const field = "field";
 
 export default function AddTaskModal({ open, onClose, onCreate, saving }) {
   const [form, setForm] = useState({
@@ -44,7 +42,7 @@ export default function AddTaskModal({ open, onClose, onCreate, saving }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/40 p-4 sm:items-center">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-[#2e2a24]/45 p-4 sm:items-center">
       <div
         className="absolute inset-0"
         onClick={onClose}
@@ -54,17 +52,17 @@ export default function AddTaskModal({ open, onClose, onCreate, saving }) {
         role="dialog"
         aria-modal="true"
         aria-label="Create task"
-        className="relative w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl"
+        className="relative w-full max-w-lg paper p-6 shadow-lg"
       >
         <div className="flex items-start justify-between">
           <div>
-            <h2 className="text-base font-semibold text-slate-900">New task</h2>
-            <p className="mt-0.5 text-xs text-slate-500">Add it to your board.</p>
+            <h2 className="font-serif text-[19px] text-[#2e2a24]">New task</h2>
+            <p className="mt-0.5 text-xs text-[#8d8471]">Add it to your board.</p>
           </div>
           <button
             onClick={onClose}
             aria-label="Close"
-            className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
+            className="rounded-md p-1.5 text-[#a89c84] transition hover:bg-[#e9e1cf] hover:text-[#4a4338]"
           >
             <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M5 5l10 10M15 5L5 15" strokeLinecap="round" />
@@ -74,14 +72,14 @@ export default function AddTaskModal({ open, onClose, onCreate, saving }) {
 
         <form onSubmit={submit} className="mt-5 space-y-4">
           <div>
-            <label htmlFor="t-title" className="mb-1.5 block text-xs font-medium text-slate-700">Title</label>
+            <label htmlFor="t-title" className="mb-1.5 block text-xs font-medium text-[#4a4338]">Title</label>
             <input id="t-title" autoFocus value={form.title} onChange={set("title")}
               placeholder="e.g. Design the landing page" className={field} />
           </div>
 
           <div>
-            <label htmlFor="t-desc" className="mb-1.5 block text-xs font-medium text-slate-700">
-              Description <span className="font-normal text-slate-400">(optional)</span>
+            <label htmlFor="t-desc" className="mb-1.5 block text-xs font-medium text-[#4a4338]">
+              Description <span className="font-normal text-[#a89c84]">(optional)</span>
             </label>
             <textarea id="t-desc" rows={2} value={form.description} onChange={set("description")}
               placeholder="Any extra detail" className={`${field} resize-none`} />
@@ -89,15 +87,15 @@ export default function AddTaskModal({ open, onClose, onCreate, saving }) {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label htmlFor="t-cat" className="mb-1.5 block text-xs font-medium text-slate-700">
-                Category <span className="font-normal text-slate-400">(optional)</span>
+              <label htmlFor="t-cat" className="mb-1.5 block text-xs font-medium text-[#4a4338]">
+                Category <span className="font-normal text-[#a89c84]">(optional)</span>
               </label>
               <input id="t-cat" value={form.category} onChange={set("category")}
                 placeholder="Backend" className={field} />
             </div>
             <div>
-              <label htmlFor="t-due" className="mb-1.5 block text-xs font-medium text-slate-700">
-                Due date <span className="font-normal text-slate-400">(optional)</span>
+              <label htmlFor="t-due" className="mb-1.5 block text-xs font-medium text-[#4a4338]">
+                Due date <span className="font-normal text-[#a89c84]">(optional)</span>
               </label>
               <input id="t-due" type="date" value={form.dueDate} onChange={set("dueDate")} className={field} />
             </div>
@@ -105,7 +103,7 @@ export default function AddTaskModal({ open, onClose, onCreate, saving }) {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label htmlFor="t-pri" className="mb-1.5 block text-xs font-medium text-slate-700">Priority</label>
+              <label htmlFor="t-pri" className="mb-1.5 block text-xs font-medium text-[#4a4338]">Priority</label>
               <select id="t-pri" value={form.priority} onChange={set("priority")} className={field}>
                 {Object.keys(PRIORITY).map((k) => (
                   <option key={k} value={k}>{PRIORITY[k].label}</option>
@@ -113,7 +111,7 @@ export default function AddTaskModal({ open, onClose, onCreate, saving }) {
               </select>
             </div>
             <div>
-              <label htmlFor="t-status" className="mb-1.5 block text-xs font-medium text-slate-700">Status</label>
+              <label htmlFor="t-status" className="mb-1.5 block text-xs font-medium text-[#4a4338]">Status</label>
               <select id="t-status" value={form.status} onChange={set("status")} className={field}>
                 {STATUS_ORDER.map((k) => (
                   <option key={k} value={k}>{STATUS[k].label}</option>
@@ -123,17 +121,17 @@ export default function AddTaskModal({ open, onClose, onCreate, saving }) {
           </div>
 
           {error && (
-            <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700">{error}</p>
+            <p role="alert" className="rounded-md bg-[#f8e7e2] px-3 py-2 text-xs text-[#b0472f]">{error}</p>
           )}
 
           <div className="flex justify-end gap-2 pt-1">
             <button type="button" onClick={onClose}
-              className="rounded-lg px-4 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100">
+              className="rounded-md px-4 py-2 text-sm font-medium text-[#6f675a] transition hover:bg-[#e9e1cf]">
               Cancel
             </button>
             <button type="submit" disabled={saving}
-              className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition
-                         hover:bg-indigo-700 disabled:opacity-60">
+              className="rounded-md bg-[#8a5a3c] px-4 py-2 text-sm font-medium text-white shadow-sm transition
+                         hover:bg-[#70472f] disabled:opacity-60">
               {saving ? "Saving…" : "Create task"}
             </button>
           </div>

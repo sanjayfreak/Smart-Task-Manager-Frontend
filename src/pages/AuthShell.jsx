@@ -1,72 +1,90 @@
-/** Shared split-screen frame for the Login and Register pages. */
+/**
+ * Shared frame for Login and Register.
+ *
+ * The left page is the inside cover of the notebook: a ruled sample of
+ * the list itself, so the first thing a new user sees is the thing they
+ * are about to make — not a feature list.
+ */
+
+const SAMPLE = [
+  { title: "Finish DBMS record", note: "2 days late", late: true, dot: "#8a5a3c" },
+  { title: "Submit internship report", note: "12 Sep", late: false, dot: "#5c7a5e" },
+  { title: "Prep Capgemini aptitude", note: "14 Sep", late: false, dot: "#5c7a5e" },
+  { title: "Update resume", note: "", late: false, dot: "", done: true },
+];
+
 export default function AuthShell({ title, subtitle, children, footer }) {
   return (
     <div className="grid min-h-full lg:grid-cols-2">
-      {/* Brand panel */}
-      <div className="relative hidden overflow-hidden bg-slate-900 lg:block">
-        <div
-          className="absolute inset-0 opacity-90"
-          style={{ background: "linear-gradient(135deg,#312e81 0%,#4338ca 45%,#6d28d9 100%)" }}
-        />
-        <div className="relative flex h-full flex-col justify-between p-12 text-white">
-          <div className="flex items-center gap-2.5">
-            <div className="grid h-9 w-9 place-items-center rounded-xl bg-white/15 backdrop-blur">
-              <svg viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.2">
-                <path d="M4 10.5l3.5 3.5L16 6" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-            <span className="text-[15px] font-semibold">SmartTask</span>
+
+      {/* ---------- inside cover ---------- */}
+      <div className="relative hidden overflow-hidden border-r border-[#ddd2ba] bg-[#e9e1cf] lg:flex lg:flex-col">
+        <div className="flex h-full flex-col justify-between p-12">
+
+          <div>
+            <div className="font-hand text-[34px] leading-none text-[#8a5a3c]">Task book</div>
+            <div className="mt-1.5 font-serif text-xs italic text-[#8d8471]">Since 2026</div>
           </div>
 
           <div className="max-w-md">
-            <h2 className="text-3xl font-semibold leading-tight tracking-tight">
-              Everything you're working on, in one place.
+            <h2 className="font-serif text-[34px] leading-[1.2] tracking-[-0.01em] text-[#2e2a24] [text-wrap:pretty]">
+              A page for everything you owe yourself this week.
             </h2>
-            <p className="mt-4 text-sm leading-relaxed text-indigo-100">
-              Track what's to do, what's moving, and what's done — with priorities
-              and deadlines that keep the important work visible.
+            <p className="mt-4 text-sm leading-relaxed text-[#6f675a]">
+              Write it down, give it a day, cross it off. Status, priority and due
+              dates — nothing you would not put on paper.
             </p>
 
-            <ul className="mt-8 space-y-3 text-sm text-indigo-100">
-              {[
-                "Status, priority and due dates on every task",
-                "Secured with JWT authentication",
-                "Built on React, Spring Boot and MongoDB",
-              ].map((t) => (
-                <li key={t} className="flex items-start gap-2.5">
-                  <svg viewBox="0 0 20 20" className="mt-0.5 h-4 w-4 shrink-0 text-indigo-300"
-                    fill="none" stroke="currentColor" strokeWidth="2.2">
-                    <path d="M4 10.5l3.5 3.5L16 6" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  {t}
-                </li>
+            {/* a ruled sample of the real list */}
+            <div className="mt-9 border-t border-[#cfc2a8]">
+              {SAMPLE.map((s) => (
+                <div key={s.title} className="flex items-center gap-3.5 border-b border-[#cfc2a8] py-3">
+                  <span
+                    className={`grid h-[19px] w-[19px] shrink-0 place-items-center rounded-[3px] border-[1.6px] ${
+                      s.done ? "border-[#a89c84]" : "border-[#8a5a3c]"
+                    }`}
+                  >
+                    {s.done && (
+                      <svg viewBox="0 0 20 20" className="h-3.5 w-3.5" fill="none" stroke="#8a5a3c" strokeWidth="2.4">
+                        <path d="M3 11l4 4 10-11" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    )}
+                  </span>
+
+                  <span className={`flex-1 font-serif text-[15px] ${s.done ? "italic text-[#a89c84] line-through" : "text-[#2e2a24]"}`}>
+                    {s.title}
+                  </span>
+
+                  {s.note && (
+                    <span className={s.late ? "font-hand text-[17px] text-[#b0472f]" : "text-[11px] text-[#8d8471]"}>
+                      {s.note}
+                    </span>
+                  )}
+                  {s.dot && <span className="h-2 w-2 rounded-full" style={{ background: s.dot }} />}
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
 
-          <p className="text-xs text-indigo-200/70">© {new Date().getFullYear()} SmartTask</p>
+          <p className="font-serif text-xs italic text-[#a89c84]">© {new Date().getFullYear()} Task book</p>
         </div>
       </div>
 
-      {/* Form panel */}
-      <div className="flex items-center justify-center bg-slate-100 px-4 py-12">
+      {/* ---------- form ---------- */}
+      <div className="flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-sm">
-          <div className="mb-8 flex items-center gap-2.5 lg:hidden">
-            <div className="grid h-9 w-9 place-items-center rounded-xl bg-indigo-600 text-white">
-              <svg viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.2">
-                <path d="M4 10.5l3.5 3.5L16 6" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-            <span className="text-[15px] font-semibold text-slate-900">SmartTask</span>
+
+          <div className="mb-8 lg:hidden">
+            <div className="font-hand text-[28px] leading-none text-[#8a5a3c]">Task book</div>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-7 shadow-sm">
-            <h1 className="text-xl font-semibold tracking-tight text-slate-900">{title}</h1>
-            <p className="mt-1 text-sm text-slate-500">{subtitle}</p>
+          <div className="paper p-7">
+            <h1 className="font-serif text-[24px] tracking-[-0.01em] text-[#2e2a24]">{title}</h1>
+            <p className="mt-1.5 text-sm text-[#8d8471]">{subtitle}</p>
             <div className="mt-6">{children}</div>
           </div>
 
-          <p className="mt-5 text-center text-sm text-slate-500">{footer}</p>
+          <p className="mt-5 text-center text-sm text-[#8d8471]">{footer}</p>
         </div>
       </div>
     </div>
